@@ -2,6 +2,13 @@ var Discord = require('discord.js');
 var challonge = require('challonge')
 var request = require('request');
 
+// To get your api key:
+// 1. Create a challonge account
+// 2. Click the profile dropdown in the top right
+// 3. Click Settings
+// 4. Click the Developer API tab
+// 5. Click Generate A New API Key
+// 6. Paste the key below
 challonge.api_key = ""
 
 function checkRole(message,rolename){
@@ -26,9 +33,9 @@ function sendPlayerMatch(tournament,tournament_name,participantActive,single){
 				}
 				if(display){
 					var finalMessage = "Match " + match.suggested_play_order + " is " + "<@" + player1.participant.name.split("-")[1] + ">" + " vs " + "<@" + player2.participant.name.split("-")[1] + ">" + "!"
-					client.fetchUser(String(participantActive.participant.name.split("-")[1])).then(user => 
+					client.fetchUser(String(participantActive.participant.name.split("-")[1])).then(user =>
 						user.createDM().then(dm => {
-								dm.sendMessage(finalMessage)
+								dm.send(finalMessage)
 							}
 						)
 					)
@@ -40,10 +47,8 @@ function sendPlayerMatch(tournament,tournament_name,participantActive,single){
 
 var client = new Discord.Client();
 
-//DARKBOT
-// var token =''; 
-
-//ACTUAL
+// Get the token from the discord developer portal.
+// If you don't know how, lookup how to create a discord bot. It will show you the steps you need.
 var token = '';
 
 client.login(token);
@@ -63,7 +68,7 @@ client.on('ready', () =>{
 		};
 		customRole = serverroles[rolenames.reverse().indexOf("Tournament Manager")]
 		if(rolenames.indexOf("Tournament Manager") == -1){
-			servers[x].defaultChannel.sendMessage("You will need to reinvite this bot as there was an error upon start-up")
+			botChannel.send("You will need to reinvite this bot as there was an error upon start-up")
 			reboot = true;
 		}
 		var channelnames = []
@@ -72,7 +77,7 @@ client.on('ready', () =>{
 		};
 		customChannel = serverchannels[channelnames.reverse().indexOf("tournament-commands")]
 		if(channelnames.indexOf("tournament-commands") == -1){
-			servers[x].defaultChannel.sendMessage("You will need to reinvite this bot as there was an error upon start-up")
+			botChannel.send("You will need to reinvite this bot as there was an error upon start-up")
 			reboot = true
 		}
 		if(reboot){
@@ -101,7 +106,7 @@ client.on('guildCreate', guild => {
 	finalMessage += "I have also created a #tournament-commands channel for this server's members to use my commands in. \n"
 	finalMessage += "If you choose to remove this bot please remember to remove the role 'Tournament Manager' and the channel '#tournament-commands'. \n"
 	finalMessage += "Type c!help to view all of the commands \n"
-	guild.defaultChannel.sendMessage(finalMessage)
+	guild.defaultChannel.send(finalMessage)
 });
 
 client.on('guildDelete', guild => {
@@ -176,12 +181,12 @@ client.on('message', message => {
 			finalMessage += "Example_1: c!match BrawlhallaTourney \n"
 			finalMessage += "Example_2: c!match BrawlhallaTourney 1 \n"
 			finalMessage += "``` \n"
-			message.channel.sendMessage(finalMessage)
+			message.channel.send(finalMessage)
 		}
 
 		if(input[0] == "c!create" && input.length == 5 && checkRole(message,"Tournament Manager")){
 			challonge.createTournament(input[1],input[2],input[3],input[4],function(tournament){
-				message.channel.sendMessage(input[1] + " was created!")
+				message.channel.send(input[1] + " was created!")
 				message.guild.createRole({
 					name:"Participant - " + tournament.name,
 					color:"#FF7324",
@@ -198,11 +203,11 @@ client.on('message', message => {
 		if(input[0] == "c!start" && input.length == 2 && checkRole(message,"Owner - " + input[1].replace(/_/g," "))){
 			challonge.getTournament(input[1],function(tournament){
 				challonge.startTournament(tournament,function(){
-					message.channel.sendMessage(input[1] + " was started!")
+					message.channel.send(input[1] + " was started!")
 					var guildroles = message.guild.roles.array()
 					for (var i = guildroles.length - 1; i >= 0; i--) {
 						if(guildroles[i].name == "Participant - " + tournament.name ){
-							message.channel.sendMessage(guildroles[i].toString())
+							message.channel.send(guildroles[i].toString())
 						}
 					}
 					challonge.listParticipants(tournament,function(participants){
@@ -216,7 +221,7 @@ client.on('message', message => {
 
 		if(input[0] == "c!delete" && input.length == 2 && checkRole(message,"Owner - " + input[1].replace(/_/g," "))){
 			challonge.deleteTournament(input[1],function(tournament){
-				message.channel.sendMessage(input[1] + " was deleted!")
+				message.channel.send(input[1] + " was deleted!")
 				var guildroles = message.guild.roles.array()
 					for (var i = guildroles.length - 1; i >= 0; i--) {
 						if(guildroles[i].name == "Owner - " + tournament.name || guildroles[i].name == "Participant - " + tournament.name ){
@@ -228,7 +233,7 @@ client.on('message', message => {
 
 		if(input[0] == "c!edit" && input.length == 4 && checkRole(message,"Owner - " + input[1])){
 			challonge.updateTournament(input[1],input[2],input[3],function(){
-				message.channel.sendMessage(input[1] + " was edited!")
+				message.channel.send(input[1] + " was edited!")
 				if(input[2] == "name"){
 					var guildroles = message.guild.roles.array()
 						for (var i = guildroles.length - 1; i >= 0; i--) {
@@ -251,10 +256,10 @@ client.on('message', message => {
 						participantList.push(participants[i].participant.name)
 					}
 					if(participantList.indexOf(message.author.username + "-" + message.author.id) != -1){
-						message.channel.sendMessage(message.author.username + " has already entered in this tournament!")
+						message.channel.send(message.author.username + " has already entered in this tournament!")
 					} else {
 						challonge.addPlayer(tournament,message.author.username,message.author.id,function(){
-							message.channel.sendMessage(message.author.username + " is now entered in " + tournament.name + "!")
+							message.channel.send(message.author.username + " is now entered in " + tournament.name + "!")
 							var guildroles = message.guild.roles.array()
 							for (var i = guildroles.length - 1; i >= 0; i--) {
 								if(guildroles[i].name == "Participant - " + tournament.name){
@@ -275,10 +280,10 @@ client.on('message', message => {
 						participantList.push(participants[i].participant.name)
 					}
 					if(participantList.indexOf(message.author.username + "-" + message.author.id) == -1){
-						message.channel.sendMessage(message.author.username + " is not entered in this tournament!")
+						message.channel.send(message.author.username + " is not entered in this tournament!")
 					} else {
 						challonge.removePlayer(tournament,message.author.username,function(){
-							message.channel.sendMessage(message.author.username + " is no longer entered in " + tournament.name + "!")
+							message.channel.send(message.author.username + " is no longer entered in " + tournament.name + "!")
 							var guildroles = message.member.roles.array()
 							for (var i = guildroles.length - 1; i >= 0; i--) {
 								if(guildroles[i].name == "Participant - " + tournament.name){
@@ -295,18 +300,18 @@ client.on('message', message => {
 					finalMessage = ""
 					finalMessage += "**" + tournament.name + "** \n"
 					finalMessage += "```"
-					var dateCreated = new Date(tournament.created_at) 
-					finalMessage += "Created: " + dateCreated.toLocaleString() + " \n" 
+					var dateCreated = new Date(tournament.created_at)
+					finalMessage += "Created: " + dateCreated.toLocaleString() + " \n"
 					finalMessage += "Max Participants: " + tournament.signup_cap + " \n"
 					finalMessage += "Participants: " + tournament.participants_count + " \n"
 					finalMessage += "Game: " + tournament.game_name + " \n"
-					var dateStarted = new Date(tournament.start_at) 
+					var dateStarted = new Date(tournament.start_at)
 					finalMessage += "Start Time: " + dateStarted.toLocaleString() + " EDT \n"
 					finalMessage += "Status: " + tournament.state + " \n"
 					finalMessage += "Completion: " + tournament.progress_meter + "% \n"
 					finalMessage += "```"
-					message.channel.sendMessage(finalMessage)
-				})	
+					message.channel.send(finalMessage)
+				})
 		}
 		if(input[0] == "c!report" && input.length == 5){
 			challonge.getTournament(input[1],function(tournament){
@@ -315,12 +320,12 @@ client.on('message', message => {
 								challonge.getPlayerbyID(tournament,match.player2_id,function(player2){
 							if(checkRole(message,"Owner - " + tournament.name)){
 									challonge.updateMatch(tournament,input[2],input[3],input[4],function(){
-									message.channel.sendMessage(message.author.username + " has updated the score of match " + match.suggested_play_order + "!")
+									message.channel.send(message.author.username + " has updated the score of match " + match.suggested_play_order + "!")
 										challonge.getMatch(tournament,input[2],function(match){
 											challonge.getPlayerbyID(tournament,match.winner_id,function(winner){
-											message.channel.sendMessage(winner.participant.name.split("-")[0] + " has won match " + match.suggested_play_order + "!")
+											message.channel.send(winner.participant.name.split("-")[0] + " has won match " + match.suggested_play_order + "!")
 												challonge.getTournament(input[1],function(tournament){
-												if(tournament.progress_meter == 100){				
+												if(tournament.progress_meter == 100){
 													var members = message.guild.members.array()
 													for (var i = members.length - 1; i >= 0; i--) {
 														if(members[i].user.id == winner.participant.name.split("-")[1]){
@@ -329,16 +334,16 @@ client.on('message', message => {
 																name:"Winner - " + tournament.name,
 																color:"#FF7324",
 																mentionable: true
-															}).then(role => member.addRole(role))	
+															}).then(role => member.addRole(role))
 															challonge.deleteTournament(input[1],function(){
-																message.channel.sendMessage("<@" + winner.participant.name.split("-")[1] + ">" + " has won " + tournament.name + "!")
+																message.channel.send("<@" + winner.participant.name.split("-")[1] + ">" + " has won " + tournament.name + "!")
 																var guildroles = message.guild.roles.array()
 																for (var i = guildroles.length - 1; i >= 0; i--) {
 																	if(guildroles[i].name == "Owner - " + tournament.name || guildroles[i].name == "Participant - " + tournament.name ){
 																		guildroles[i].delete();
 																	}
 																}
-															})															
+															})
 														}
 													}
 												} else {
@@ -350,7 +355,7 @@ client.on('message', message => {
 									})
 								})
 							} else {
-									message.channel.sendMessage("Currently, only the owner of a tournament can report scores")
+									message.channel.send("Currently, only the owner of a tournament can report scores")
 							}
 						})
 					})
@@ -364,25 +369,25 @@ client.on('message', message => {
 						challonge.getPlayerbyID(tournament,match.player1_id,function(player1){
 							challonge.getPlayerbyID(tournament,match.player2_id,function(player2){
 								console.log(match)
-								var finalMessage = "Match " + match.suggested_play_order + " is " 
+								var finalMessage = "Match " + match.suggested_play_order + " is "
 								if(player1 != null){
-									finalMessage += player1.participant.name.split("-")[0] + " vs " 
+									finalMessage += player1.participant.name.split("-")[0] + " vs "
 								} else {
 									finalMessage += "Pending Participant" + " vs "
-								} 
+								}
 								if(player2 != null){
 									finalMessage += player2.participant.name.split("-")[0] + "!"
 								} else {
 									finalMessage += "Pending Participant"
 								}
-								if(match.scores_csv != ""){									
+								if(match.scores_csv != ""){
 									finalMessage += "\n"
 									finalMessage += "The score is currently " + match.scores_csv + "."
 								} else {
 									finalMessage += "\n"
 									finalMessage += "No scores have been reported."
 								}
-								message.channel.sendMessage(finalMessage)
+								message.channel.send(finalMessage)
 							})
 						})
 					})
@@ -395,18 +400,18 @@ client.on('message', message => {
 					challonge.getMatchByPlayer(input[1],message.author.username,function(match){
 						challonge.getPlayerbyID(tournament,match.player1_id,function(player1){
 							challonge.getPlayerbyID(tournament,match.player2_id,function(player2){
-								var finalMessage = "Match " + match.suggested_play_order + " is " 
+								var finalMessage = "Match " + match.suggested_play_order + " is "
 								if(player1 != null){
-									finalMessage += player1.participant.name.split("-")[0] + " vs " 
+									finalMessage += player1.participant.name.split("-")[0] + " vs "
 								} else {
 									finalMessage += "Pending Participant" + " vs "
-								} 
+								}
 								if(player2 != null){
 									finalMessage += player2.participant.name.split("-")[0] + "!"
 								} else {
 									finalMessage += "Pending Participant"
 								}
-								if(match.scores_csv != ""){									
+								if(match.scores_csv != ""){
 									finalMessage += "\n"
 									finalMessage += "The score is currently " + match.scores_csv + "."
 								} else {
@@ -414,7 +419,7 @@ client.on('message', message => {
 									finalMessage += "No scores have been reported."
 								}
 								if(match.state != "complete"){
-									message.channel.sendMessage(finalMessage)
+									message.channel.send(finalMessage)
 								}
 							})
 						})
@@ -428,23 +433,23 @@ client.on('message', message => {
 							challonge.getPlayerbyID(tournament,match.player2_id,function(player2){
 								var finalMessage = "Match " + match.suggested_play_order + " is "
 								if(player1 != null){
-									finalMessage += "<@" + player1.participant.name.split("-")[1] + ">" + " vs " 
+									finalMessage += "<@" + player1.participant.name.split("-")[1] + ">" + " vs "
 								} else {
 									finalMessage += "Pending Participant" + " vs "
-								} 
+								}
 								if(player2 != null){
 									finalMessage += "<@" + player2.participant.name.split("-")[1] + ">" + "!"
 								} else {
 									finalMessage += "Pending Participant"
 								}
-								if(match.scores_csv != ""){									
+								if(match.scores_csv != ""){
 									finalMessage += "\n"
 									finalMessage += "The score is currently " + match.scores_csv + "."
 								} else {
 									finalMessage += "\n"
 									finalMessage += "No scores have been reported."
 								}
-								message.channel.sendMessage(finalMessage)
+								message.channel.send(finalMessage)
 							})
 						})
 					})
@@ -457,4 +462,4 @@ client.on('message', message => {
 
 process.on("unhandledRejection", err => {
 	console.error("Uncaught Promise Error: \n" + err.stack);
-});	
+});
